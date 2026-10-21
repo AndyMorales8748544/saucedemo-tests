@@ -1,0 +1,41 @@
+name: Pruebas automatizadas SauceDemo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  selenium-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar pruebas con Selenium
+        run: |
+          python -m pytest -v --browser=${{ matrix.browser }} --headless -n 2
+
+      - name: Guardar reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-${{ matrix.browser }}
+          path: reports/
+          if-no-files-found: warn
